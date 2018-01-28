@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 from sklearn import cross_validation
-from sklearn import linear_model
+from sklearn import linear_model, svm
 from scipy import linalg
 
 
@@ -159,9 +159,7 @@ def test_decoding(img, condition, modality, n_perm=10000):
         y1 = condition[i][modality[i] == m1]
         X2 = img[i][modality[i] == m2]
         y2 = condition[i][modality[i] == m2]
-        #cv = cross_validation.ShuffleSplit(X1.shape[0],50)
-        # clf = linear_model.LogisticRegression(cv=cv, Cs=5)
-        clf = linear_model.LogisticRegression(fit_intercept=False)
+        clf = svm.LinearSVC(fit_intercept=False)
         clf.fit(X1, y1.ravel())
         score += (clf.predict(X2) == y2.ravel()).mean()
         perms = [np.random.permutation(X2.shape[0]) for _ in range(n_perm)]
@@ -170,7 +168,7 @@ def test_decoding(img, condition, modality, n_perm=10000):
         # compute the permuted test statistic
         scores_perm_sub = []
         for pi, pi2 in zip(perms, perms2):
-            clf = linear_model.LogisticRegression(fit_intercept=False)
+            clf = svm.LinearSVC(fit_intercept=False)
             clf.fit(X1, y1.ravel()[pi2])
             tmp = (clf.predict(X2) == y2.ravel()[pi]).mean()
             scores_perm_sub.append(tmp)

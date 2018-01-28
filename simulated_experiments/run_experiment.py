@@ -1,3 +1,4 @@
+import os
 from CMPT import *
 from joblib import delayed, Parallel
 
@@ -12,7 +13,10 @@ for width in all_width:
     n_perm = 10000
     alphas = np.linspace(0, alpha_max, n_alphas)
     noise = 0.5
-    n_samples = 10
+    n_samples = 20
+    
+    if not os.path.exists('data'):
+        os.mkdir('data')
 
     np.save('data/alphas_%s.npy' % width, alphas)
 
@@ -40,7 +44,7 @@ for width in all_width:
             pval, _, _ = test_decoding([samples], [condition], [modality], n_perm=n_perm)
             pvals.append(pval)
         return pvals
-     out_decoding = Parallel(n_jobs=n_jobs, verbose=2)(delayed(column_errors_decoding)(i) for i in range(n_iters))
+    out_decoding = Parallel(n_jobs=n_jobs, verbose=2)(delayed(column_errors_decoding)(i) for i in range(n_iters))
     out_decoding = np.array(out_decoding)
     print(out_decoding.mean(0))
     np.save('data/decoding_%s_%s.npy' % (width, run), out_decoding)
