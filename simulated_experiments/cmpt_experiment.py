@@ -40,7 +40,7 @@ for width in all_width:
             pval, _, _ = test_decoding([samples], [condition], [modality], n_perm=n_perm)
             pvals.append(pval)
         return pvals
-     out_decoding = Parallel(n_jobs=n_jobs, verbose=2)(delayed(column_errors_decoding)(i) for i in range(n_iters))
+    out_decoding = Parallel(n_jobs=n_jobs, verbose=2)(delayed(column_errors_decoding)(i) for i in range(n_iters))
     out_decoding = np.array(out_decoding)
     print(out_decoding.mean(0))
     np.save('data/decoding_%s_%s.npy' % (width, run), out_decoding)
