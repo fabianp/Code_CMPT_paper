@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 from sklearn import cross_validation
-from sklearn import linear_model
+from sklearn import linear_model, svm
 from scipy import linalg
 
 
@@ -97,7 +97,7 @@ def test_permutation(activation_img, condition, modality, verbose=False, n_perm=
         T_perm.append(T_subj)
     T_perm = np.array(T_perm)
 
-    pval = 1 - (T0 > T_perm).mean()
+    pval = (T_perm > T0).mean()
     return pval, T0, T_perm
 
 
@@ -150,36 +150,30 @@ def test_decoding(img, condition, modality, n_perm=10000):
     score = 0.
     scores_perm = []
 
-    # create permutations beforehand so they are shared
-    # across subjects
-
-
     for i in range(n_sub):
         X1 = img[i][modality[i] == m1]
         y1 = condition[i][modality[i] == m1]
         X2 = img[i][modality[i] == m2]
         y2 = condition[i][modality[i] == m2]
-        #cv = cross_validation.ShuffleSplit(X1.shape[0],50)
-        # clf = linear_model.LogisticRegression(cv=cv, Cs=5)
-        clf = linear_model.LogisticRegression(fit_intercept=False)
+        clf = svm.LinearSVC(fit_intercept=False)
         clf.fit(X1, y1.ravel())
-        score += (clf.predict(X2) == y2.ravel()).mean()
+        score += -clf.score(X2, y2.ravel())
         perms = [np.random.permutation(X2.shape[0]) for _ in range(n_perm)]
         perms2 = [np.random.permutation(X2.shape[0]) for _ in range(n_perm)]
 
         # compute the permuted test statistic
         scores_perm_sub = []
-        for pi, pi2 in zip(perms, perms2):
-            clf = linear_model.LogisticRegression(fit_intercept=False)
-            clf.fit(X1, y1.ravel()[pi2])
-            tmp = (clf.predict(X2) == y2.ravel()[pi]).mean()
+        for pi1, pi2 in zip(perms, perms2):
+            clf = svm.LinearSVC(fit_intercept=False)
+            clf.fit(X1, y1.ravel()[pi1])
+            tmp = -clf.score(X2, y2.ravel()[pi2])
             scores_perm_sub.append(tmp)
         scores_perm.append(scores_perm_sub)
 
     # add across subjects
     scores_perm = np.array(scores_perm).sum(0)
 
-    pval = (scores_perm >= score).mean()
+    pval = ((scores_perm <= score).sum() + 1.) / (n_perm + 1.)
 
     return pval, score, scores_perm
 
