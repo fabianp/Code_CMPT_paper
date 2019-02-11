@@ -1,6 +1,5 @@
 import numpy as np
 import itertools
-from sklearn import cross_validation
 from sklearn import linear_model, svm
 from scipy import linalg
 
